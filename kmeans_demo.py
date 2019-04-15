@@ -11,7 +11,7 @@ dataset_dir = "/ext/alisher_research/cifar-10-batches-py"
 rf_size = 6
 num_centroids = 1600
 whitening = True
-num_patches = 400000
+num_patches = 40000
 image_dimensions = [32, 32, 3]
 
 train_x, train_y = load_cifar10_training_data(dataset_dir)

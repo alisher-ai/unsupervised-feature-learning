@@ -23,8 +23,9 @@ def run_kmeans(patches, num_centroids, iterations):
             [val, labels] = [matrix.max(0), matrix.argmax(0)]
             loss += np.sum(0.5 * patches2[i: last_index+1] - np.transpose(val))
 
-            S = sparse.csr_matrix((1, (range(m+1), labels)), shape=(m+1, num_centroids))
-            counts += np.sum(S, axis=0)
+            S = sparse.csr_matrix((np.ones(m+1), (np.array(range(m+1)), labels)), [m+1, num_centroids])
+            summation = summation + np.transpose(S) * patches[i:last_index+1,:]
+            counts += np.sum(S, axis=0).transpose()
 
         centroids = summation / counts
         bad_index = np.where(counts == 0)
