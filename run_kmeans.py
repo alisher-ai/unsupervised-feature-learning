@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import sparse
+import scipy.io as sio
 
 
 def run_kmeans(patches, num_centroids, iterations):
@@ -15,29 +16,20 @@ def run_kmeans(patches, num_centroids, iterations):
         counts = np.zeros((num_centroids, 1))
         loss = 0
 
-        for i in range(0, patches.shape[1], batch_size):
-            last_index = min(i + batch_size - 1, patches.shape[0])
+        for i in range(0, patches.shape[0], batch_size):
+            last_index = min(i + batch_size, patches.shape[0])
             m = last_index - i
 
-            matrix = np.matmul(centroids, np.transpose(patches[i:last_index+1, :])) - np.reshape(c2, [-1, 1])
+            matrix = np.matmul(centroids, np.transpose(patches[i:last_index, :])) - np.reshape(c2, [-1, 1])
             [val, labels] = [matrix.max(0), matrix.argmax(0)]
-            loss += np.sum(0.5 * patches2[i: last_index+1] - np.transpose(val))
+            loss += np.sum(0.5 * patches2[i: last_index] - np.transpose(val))
 
-            S = sparse.csr_matrix((np.ones(m+1), (np.array(range(m+1)), labels)), [m+1, num_centroids])
-            summation = summation + np.transpose(S) * patches[i:last_index+1,:]
+            S = sparse.csr_matrix((np.ones(m), (np.array(range(m)), labels)), [m, num_centroids])
+            summation = summation + np.transpose(S) * patches[i:last_index, :]
             counts += np.sum(S, axis=0).transpose()
 
         centroids = summation / counts
-        bad_index = np.where(counts == 0)
+        bad_index = np.where(counts == 0)[0]
         centroids[bad_index, :] = 0
 
     return centroids
-
-
-# def run_kmeans(patches, num_centroids, iterations):
-#     from sklearn.cluster import KMeans
-#     X = np.array([[1, 2], [1, 4], [1, 0], [10, 2], [10, 4], [10, 0]])
-#     kmeans = KMeans(n_clusters=num_centroids, random_state=0, max_iter=iterations).fit(X)
-#
-#     return kmeans.cluster_centers_
-
