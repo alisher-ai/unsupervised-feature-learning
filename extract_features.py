@@ -72,6 +72,4 @@ def extract_features_post_processing(whitening, data_x, centroids, rf_size, imag
     trainXCs = np.transpose((trainXC - trainXC_mean) / trainXC_sd)
     trainXCs = np.concatenate((np.transpose(trainXCs), np.ones((trainXCs.shape[1], 1))), axis=1)
 
-    # trainXCs = trainXCs[:10, :]
-
     return trainXCs
