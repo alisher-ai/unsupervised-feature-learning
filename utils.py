@@ -1,5 +1,7 @@
-import cPickle
 import os
+from statistics import variance
+import cPickle
+import cv2
 import numpy as np
 
 
@@ -15,6 +17,19 @@ def save_to_pickle(filepath, data):
         cPickle.dump(data, fp)
 
 
+def array2im(img, length):
+    try:
+        channel_len = length / 3
+        resolution = int(np.sqrt(channel_len))
+        r = img[0:channel_len].reshape((resolution, resolution))
+        g = img[channel_len: 2*channel_len].reshape((resolution, resolution))
+        b = img[2*channel_len: 3*channel_len].reshape((resolution, resolution))
+    except:
+        return None
+    # return cv2.merge((b, g, r))
+    return cv2.merge((r, g, b))
+
+
 def load_cifar10_training_data(dataset_dir):
     print('Loading training data...\n')
     f1 = load_from_pickle(os.path.join(dataset_dir, 'data_batch_1'))
@@ -23,11 +38,22 @@ def load_cifar10_training_data(dataset_dir):
     f4 = load_from_pickle(os.path.join(dataset_dir, 'data_batch_4'))
     f5 = load_from_pickle(os.path.join(dataset_dir, 'data_batch_5'))
 
-    train_x = np.concatenate((f1['data'], f2['data'], f3['data'], f4['data'], f5['data']), axis=0)
-    train_y = np.concatenate((f1['labels'], f2['labels'], f3['labels'], f4['labels'], f5['labels']), axis=0)
+    # train_x = np.concatenate((f1['data'], f2['data'], f3['data'], f4['data'], f5['data']), axis=0)
+    train_x = np.concatenate((f1['data'], f2['data']), axis=0)
+    # train_y = np.concatenate((f1['labels'], f2['labels'], f3['labels'], f4['labels'], f5['labels']), axis=0)
+    train_y = np.concatenate((f1['labels'], f2['labels']), axis=0)
 
-    # del f1, f2, f3, f4, f5
     return train_x, train_y
+
+
+def load_cifar10_test_data(dataset_dir):
+    print('Loading test data...\n')
+    f1 = load_from_pickle(os.path.join(dataset_dir, 'test_batch'))
+    test_x = f1['data']
+    test_y = f1['labels']
+
+    return test_x, test_y
+
 
 def extract_random_patches(num_patches, rf_size, train_x, train_y, image_dimensions):
     patches = np.zeros((num_patches, rf_size * rf_size * 3))
@@ -37,20 +63,20 @@ def extract_random_patches(num_patches, rf_size, train_x, train_y, image_dimensi
     for i in range(num_patches):
         if i % 10000 == 0:
             print("Extracting patch: {} / {}".format(i, num_patches))
-        r = int(np.random.uniform(image_dimensions[0] - rf_size + 1))
-        c = int(np.random.uniform(image_dimensions[1] - rf_size + 1))
-        patch = np.reshape(train_x[i % train_x.shape[0], :], tuple(image_dimensions))
-        patch = patch[r:r + rf_size, c:c + rf_size, :]
-        patches[i] = np.reshape(patch, -1)
-    return patches
+        r = int(np.random.uniform(image_dimensions[0] - rf_size))
+        c = int(np.random.uniform(image_dimensions[1] - rf_size))
+        patch_ = array2im(train_x[i % train_x.shape[0], :], train_x.shape[1])
+        patch = patch_[r:r + rf_size, c:c + rf_size, :]
+        patches[i] = np.reshape(cv2.transpose(patch), -1, order='F')
+    return np.transpose(patches)
 
 
 def normalize_for_contrast(patches):
     """ normalize for contrast
     """
-    patches_mean = np.reshape(np.mean(patches, 1), (-1, 1))
-    patches_variance = np.reshape(np.var(patches, 1), (-1, 1))
-    patches = patches - patches_mean
+    patches_mean = np.reshape(np.mean(patches, 1), (1, -1))
+    patches_variance = np.reshape(np.var(patches, 1, ddof=1), (1, -1))
+    patches = np.transpose(patches) - patches_mean
     patches = patches / np.sqrt(patches_variance + 10)
     return patches
 
@@ -64,4 +90,18 @@ def data_whitening(patches):
     W = np.dot(np.dot(V, D), V.T)
     patches = np.dot(patches, W)
 
-    return patches
+    return patches, np.mean(np.mean(patches)), W
+
+
+def im2col_sliding_strided(patch, window, stepsize=1):
+    m, n = patch.shape
+    s0, s1 = patch.strides
+    nrows = m-window[0]+1
+    ncols = n-window[1]+1
+    shp = window[0], window[1], nrows, ncols
+    strd = s0, s1, s0, s1
+
+    out_view = np.lib.stride_tricks.as_strided(patch, shape=shp, strides=strd)
+    return out_view.reshape(window[0]*window[1], -1)[:, ::stepsize]
+
+
