@@ -60,16 +60,14 @@ def extract_features_from_data(data_x, centroids, rf_size, image_dimensions):
     return data_x_centroids
 
 
-def extract_features_post_processing(whitening, data_x, centroids, rf_size, image_dimensions, m=None, p=None):
-    if whitening:
-        trainXC = extract_features_from_whitened_data(data_x, centroids, rf_size, image_dimensions, m, p)
-    else:
-        trainXC = extract_features_from_data(data_x, centroids, rf_size, image_dimensions)
+def extract_features_post_processing(dataXC, training_algorithm):
+    dataXC_mean = np.mean(dataXC, 0)
+    dataXC_sd = np.sqrt(np.var(dataXC, 0, ddof=1) + 0.01)
 
-    trainXC_mean = np.mean(trainXC, 0)
-    trainXC_sd = np.sqrt(np.var(trainXC, 0, ddof=1) + 0.01)
+    dataXCs = np.transpose((dataXC - dataXC_mean) / dataXC_sd)
+    if training_algorithm == 'sklearn_svm':
+        dataXCs = np.concatenate((np.transpose(dataXCs), np.ones((dataXCs.shape[1], 1))), axis=1)
+    elif training_algorithm == 'keras_nn':
+        dataXCs = np.asarray(np.transpose(dataXCs))
 
-    trainXCs = np.transpose((trainXC - trainXC_mean) / trainXC_sd)
-    trainXCs = np.concatenate((np.transpose(trainXCs), np.ones((trainXCs.shape[1], 1))), axis=1)
-
-    return trainXCs
+    return dataXCs
