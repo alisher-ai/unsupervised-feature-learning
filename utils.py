@@ -38,10 +38,8 @@ def load_cifar10_training_data(dataset_dir):
     f4 = load_from_pickle(os.path.join(dataset_dir, 'data_batch_4'))
     f5 = load_from_pickle(os.path.join(dataset_dir, 'data_batch_5'))
 
-    # train_x = np.concatenate((f1['data'], f2['data'], f3['data'], f4['data'], f5['data']), axis=0)
-    train_x = np.concatenate((f1['data'], f2['data']), axis=0)
-    # train_y = np.concatenate((f1['labels'], f2['labels'], f3['labels'], f4['labels'], f5['labels']), axis=0)
-    train_y = np.concatenate((f1['labels'], f2['labels']), axis=0)
+    train_x = np.concatenate((f1['data'], f2['data'], f3['data'], f4['data'], f5['data']), axis=0)
+    train_y = np.concatenate((f1['labels'], f2['labels'], f3['labels'], f4['labels'], f5['labels']), axis=0)
 
     return train_x, train_y
 
@@ -49,31 +47,28 @@ def load_cifar10_training_data(dataset_dir):
 def load_cifar10_test_data(dataset_dir):
     print('Loading test data...\n')
     f1 = load_from_pickle(os.path.join(dataset_dir, 'test_batch'))
-    test_x = f1['data']
-    test_y = f1['labels']
+    test_x = np.asarray(f1['data'])
+    test_y = np.asarray(f1['labels'])
 
     return test_x, test_y
 
 
-def extract_random_patches(num_patches, rf_size, train_x, train_y, image_dimensions):
+def extract_random_patches(num_patches, rf_size, data_x, image_dimensions):
+    """ extract random patches from train set of CIFAR10 dataset """
     patches = np.zeros((num_patches, rf_size * rf_size * 3))
-
-    """ extract random patches from train set of CIFAR10 dataset
-    """
     for i in range(num_patches):
         if i % 10000 == 0:
             print("Extracting patch: {} / {}".format(i, num_patches))
         r = int(np.random.uniform(image_dimensions[0] - rf_size))
         c = int(np.random.uniform(image_dimensions[1] - rf_size))
-        patch_ = array2im(train_x[i % train_x.shape[0], :], train_x.shape[1])
+        patch_ = array2im(data_x[i % data_x.shape[0], :], data_x.shape[1])
         patch = patch_[r:r + rf_size, c:c + rf_size, :]
         patches[i] = np.reshape(cv2.transpose(patch), -1, order='F')
     return np.transpose(patches)
 
 
 def normalize_for_contrast(patches):
-    """ normalize for contrast
-    """
+    """ normalize for contrast """
     patches_mean = np.reshape(np.mean(patches, 1), (1, -1))
     patches_variance = np.reshape(np.var(patches, 1, ddof=1), (1, -1))
     patches = np.transpose(patches) - patches_mean
@@ -82,8 +77,7 @@ def normalize_for_contrast(patches):
 
 
 def data_whitening(patches):
-    """ whiten
-    """
+    """ whiten """
     C = np.dot(patches.T, patches)
     d, V = np.linalg.eigh(C)
     D = np.diag(1. / np.sqrt(d + 0.1))
