@@ -26,7 +26,7 @@ training_algorithm = 'keras_nn'  # sklearn_svm, keras_nn
 
 """ load and extract the tiny patches from training data """
 train_x, train_y = load_cifar10_training_data(dataset_dir)
-# patches = extract_random_patches(num_patches, rf_size, train_x, train_y, image_dimensions)
+# patches = extract_random_patches(num_patches, rf_size, train_x, image_dimensions)
 # patches = normalize_for_contrast(patches)
 # if whitening:
 #     patches, m, p = data_whitening(patches)
