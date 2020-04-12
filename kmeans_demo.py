@@ -26,27 +26,31 @@ training_algorithm = 'keras_nn'  # sklearn_svm, keras_nn
 
 """ load and extract the tiny patches from training data """
 train_x, train_y = load_cifar10_training_data(dataset_dir)
-# patches = extract_random_patches(num_patches, rf_size, train_x, image_dimensions)
-# patches = normalize_for_contrast(patches)
-# if whitening:
-#     patches, m, p = data_whitening(patches)
-#
-# """ run k-means """
-# centroids = run_kmeans(patches, num_centroids, 50)
-# plot_centroids(centroids=centroids, width=rf_size, height=rf_size)
-#
-# """ extract training features """
-# if whitening:
-#     trainXC = extract_features_from_whitened_data(train_x, centroids, rf_size, image_dimensions, m, p)
-# else:
-#     trainXC = extract_features_from_data(train_x, centroids, rf_size, image_dimensions)
-# trainXCs = extract_features_post_processing(trainXC, training_algorithm)
-#
-# dump(centroids, '/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
-# dump(trainXCs, '/ext/alisher_research/trainXCs.joblib'.format(trainXCs))
+if os.path.exists('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids)) and os.path.exists('/ext/alisher_research/trainXCs.joblib):
+    centroids = load('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
+    trainXCs = load('/ext/alisher_research/trainXCs.joblib')
+else:                                                                                         
+    patches = extract_random_patches(num_patches, rf_size, train_x, image_dimensions)
+    patches = normalize_for_contrast(patches)
+    if whitening:
+        patches, m, p = data_whitening(patches)
 
-centroids = load('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
-trainXCs = load('/ext/alisher_research/trainXCs.joblib')
+    """ run k-means """
+    centroids = run_kmeans(patches, num_centroids, 50)
+    plot_centroids(centroids=centroids, width=rf_size, height=rf_size)
+
+    """ extract training features """
+    if whitening:
+        trainXC = extract_features_from_whitened_data(train_x, centroids, rf_size, image_dimensions, m, p)
+    else:
+        trainXC = extract_features_from_data(train_x, centroids, rf_size, image_dimensions)
+    trainXCs = extract_features_post_processing(trainXC, training_algorithm)
+
+    dump(centroids, '/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
+    dump(trainXCs, '/ext/alisher_research/trainXCs.joblib'.format(trainXCs))
+
+    centroids = load('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
+    trainXCs = load('/ext/alisher_research/trainXCs.joblib')
 
 """ Training process:
 1. Support Vector Machine (SVM) Classifier training 
