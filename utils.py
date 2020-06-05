@@ -1,25 +1,25 @@
 import os
 from statistics import variance
-import cPickle
+import pickle
 import cv2
 import numpy as np
 
 
 def load_from_pickle(filepath):
     with open(filepath, 'rb') as fo:
-        data_dict = cPickle.load(fo)
+        data_dict = pickle.load(fo)
 
     return data_dict
 
 
 def save_to_pickle(filepath, data):
     with open(filepath, 'wb') as fp:
-        cPickle.dump(data, fp)
+        pickle.dump(data, fp)
 
 
 def array2im(img, length):
     try:
-        channel_len = length / 3
+        channel_len = int(length / 3)
         resolution = int(np.sqrt(channel_len))
         r = img[0:channel_len].reshape((resolution, resolution))
         g = img[channel_len: 2*channel_len].reshape((resolution, resolution))
