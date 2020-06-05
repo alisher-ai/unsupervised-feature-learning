@@ -26,7 +26,7 @@ training_algorithm = 'keras_nn'  # sklearn_svm, keras_nn
 
 """ load and extract the tiny patches from training data """
 train_x, train_y = load_cifar10_training_data(dataset_dir)
-if os.path.exists('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids)) and os.path.exists('/ext/alisher_research/trainXCs.joblib):
+if os.path.exists('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids)) and os.path.exists('/ext/alisher_research/trainXCs.joblib'):
     centroids = load('/ext/alisher_research/centroids_{}.joblib'.format(num_centroids))
     trainXCs = load('/ext/alisher_research/trainXCs.joblib')
 else:                                                                                         
