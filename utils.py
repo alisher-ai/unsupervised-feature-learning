@@ -86,7 +86,7 @@ def data_whitening(patches):
 
     return patches, M, P 
 
-def data_whitening(patches):
+def data_whitening_prev(patches):
     """ whiten """
     C = np.dot(patches.T, patches)
     d, V = np.linalg.eigh(C)
