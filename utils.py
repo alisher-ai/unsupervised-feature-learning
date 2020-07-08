@@ -75,6 +75,16 @@ def normalize_for_contrast(patches):
     patches = patches / np.sqrt(patches_variance + 10)
     return patches
 
+def data_whitening(patches):
+    """ whiten """
+    C = np.cov(patches, rowvar=False)  # 108 x 108 (for 6x6x3 kernels)
+    M = np.mean(patches, axis=0)
+    d, V = np.linalg.eig(C)
+    D = np.diag(np.sqrt(1. / (d + 0.1)))
+    P = np.matmul(np.matmul(V, D), V.T)
+    patches = np.matmul(patches - M, P)
+
+    return patches, M, P 
 
 def data_whitening(patches):
     """ whiten """
